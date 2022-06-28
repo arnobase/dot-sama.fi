@@ -21,7 +21,7 @@ function Chart(props) {
     const [datemaj,setDate] = useState(new Date().toTimeString())
     const [lastblockOnchainAcala,setLastBlockOnchainAcala] = useState(lastBlockData['onchain']['acala'])
     const [lastblockSubqueryAcala,setLastBlockSubqueryAcala] = useState(lastBlockData['subquery']['acala'])   
-
+    let loaded=false;
 
     useEffect(() => {
         const handleResize = () => {
@@ -55,7 +55,7 @@ function Chart(props) {
                 secondsVisible: true,
             },
         });
-        let candleSeries = chart.addCandlestickSeries({
+        let cs = chart.addCandlestickSeries({
             priceFormat: {
                 type: "price",
                 minMove: Math.pow(10, -6),
@@ -64,8 +64,9 @@ function Chart(props) {
         });
         //console.log("USE_EFFECT POOL DATA",pooldata)
         //candleSeries.setData(pooldata);
-        setCandleSeries(candleSeries)
-        //load("Block")
+        setCandleSeries(cs)
+        console.log("candleSeries",candleSeries,cs)
+        //if (!loaded) {load("Block",cs);loaded=true;}
         return () => {
             // Nettoyage 
 			window.removeEventListener('resize', handleResize);
@@ -74,7 +75,7 @@ function Chart(props) {
 
     }, []);
 
-    function load(tf=timeframe) {
+    function load(tf=timeframe,cs=candleSeries) {
         
         let pair = getPairByTokenName(token0,token1)
         console.log("PAIR",pair)
@@ -86,19 +87,20 @@ function Chart(props) {
                 console.log("DATA SUBQUERY",dataSubquery);
                 //candleSeries.setData(pooldata);
                 let graphDataSubquery = convertJsonDataToChartEntries(dataSubquery,"subquery",source)
-                candleSeries.setData(graphDataSubquery);
+                console.log("candleSeries2",candleSeries)
+                cs.setData(graphDataSubquery);
                 //("lastblock subquery acala",lastBlockData["subquery"]['acala'])
                 console.log("GRAPHDATAS SUBQUERY",graphDataSubquery)
                 //getOnchainPoolData("acala","Block","DOT","LCDOT",2,lastBlockData["subquery"]['acala'],null).then( () => {
-                loadOnchain(tf)
+                loadOnchain(tf,cs)
             }); 
         } else if (pair.types.includes("onchain")) {
-            loadOnchain(tf)
+            loadOnchain(tf,cs)
         }
         
     }  
 
-    function loadOnchain(tf=timeframe) {
+    function loadOnchain(tf=timeframe,cs=candleSeries) {
         let pair = getPairByTokenName(token0,token1)
         getOnchainPoolData(source,tf,pair.token0name,pair.token1name,pair.dec,lastBlockData["subquery"]['acala']).then( (dataOnchain) => {
             setLastBlockOnchainAcala(lastBlockData["onchain"][source])
@@ -106,7 +108,7 @@ function Chart(props) {
             //setPoolData(graphData); 
             //console.log("CANDLESERIE",candleSeries)
             console.log("GRAPHDATA ONCHAIN",graphDataOnchain)
-            graphDataOnchain.forEach(entry => {candleSeries.update(entry)}); 
+            graphDataOnchain.forEach(entry => {cs.update(entry)}); 
             
             //setInterval(function() {
                 
