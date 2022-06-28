@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import { createChart, CrosshairMode } from "lightweight-charts";
 import {getSubqueryPoolData,getOnchainPoolData,lastBlockData,convertJsonDataToChartEntries} from '../lib/get-pooldata'
 import {getSubstrateAPI} from '../lib/substrate-apis'
-import {getPairNameByTokenId, getPairByTokenName, getPairByTokenId} from '../lib/pairs'
+import {getPairByTokenName, getPairByTokenId} from '../lib/pairs'
 import store from '../lib/store';
 
 function Chart(props) {
@@ -74,50 +74,60 @@ function Chart(props) {
 
     }, []);
 
-
-
     function load(tf=timeframe) {
         
-        getSubqueryPoolData(source,tf,token0,token1,dec,refLimit.current.value).then((dataSubquery)=>{
-            setLastBlockSubqueryAcala(lastBlockData["subquery"]['acala'])
-            setPoolData(dataSubquery); 
-            setDate(dataSubquery[dataSubquery.length-1].datetime)
-            console.log("DATA SUBQUERY",dataSubquery);
-            //candleSeries.setData(pooldata);
-            let graphDataSubquery = convertJsonDataToChartEntries(dataSubquery,"subquery",source)
-            candleSeries.setData(graphDataSubquery);
-            //("lastblock subquery acala",lastBlockData["subquery"]['acala'])
-            console.log("GRAPHDATAS SUBQUERY",graphDataSubquery)
-            //getOnchainPoolData("acala","Block","DOT","LCDOT",2,lastBlockData["subquery"]['acala'],null).then( () => {
-            getOnchainPoolData("acala","Block","DOT","LCDOT",2,lastBlockData["subquery"]['acala']).then( (dataOnchain) => {
-                setLastBlockOnchainAcala(lastBlockData["onchain"]['acala'])
-                let graphDataOnchain = convertJsonDataToChartEntries(dataOnchain,"onchain","acala")
-                //setPoolData(graphData); 
-                //console.log("CANDLESERIE",candleSeries)
-                console.log("GRAPHDATA ONCHAIN",graphDataOnchain)
-                graphDataOnchain.forEach(entry => {candleSeries.update(entry)}); 
-                
-                //setInterval(function() {
-                    
-                    //console.log(lastBlocks)
-                    //let last = lastBlocks.pop()
-                    console.log("DATAS ONCHAIN",graphDataOnchain)
-                    JSON.toString(graphDataOnchain)
-                     
-                    //
-                //}, 10000);
-            })
-        }); 
+        let pair = getPairByTokenName(token0,token1)
+        console.log("PAIR",pair)
+        if (pair.types.includes("subquery")) {
+            getSubqueryPoolData(source,tf,pair.token0id,pair.token1id,pair.dec,refLimit.current.value).then((dataSubquery)=>{
+                setLastBlockSubqueryAcala(lastBlockData["subquery"]['acala'])
+                setPoolData(dataSubquery); 
+                setDate(dataSubquery[dataSubquery.length-1].datetime)
+                console.log("DATA SUBQUERY",dataSubquery);
+                //candleSeries.setData(pooldata);
+                let graphDataSubquery = convertJsonDataToChartEntries(dataSubquery,"subquery",source)
+                candleSeries.setData(graphDataSubquery);
+                //("lastblock subquery acala",lastBlockData["subquery"]['acala'])
+                console.log("GRAPHDATAS SUBQUERY",graphDataSubquery)
+                //getOnchainPoolData("acala","Block","DOT","LCDOT",2,lastBlockData["subquery"]['acala'],null).then( () => {
+                loadOnchain(tf)
+            }); 
+        } else if (pair.types.includes("onchain")) {
+            loadOnchain(tf)
+        }
+        
     }  
+
+    function loadOnchain(tf=timeframe) {
+        let pair = getPairByTokenName(token0,token1)
+        getOnchainPoolData(source,tf,pair.token0name,pair.token1name,pair.dec,lastBlockData["subquery"]['acala']).then( (dataOnchain) => {
+            setLastBlockOnchainAcala(lastBlockData["onchain"][source])
+            let graphDataOnchain = convertJsonDataToChartEntries(dataOnchain,"onchain",source)
+            //setPoolData(graphData); 
+            //console.log("CANDLESERIE",candleSeries)
+            console.log("GRAPHDATA ONCHAIN",graphDataOnchain)
+            graphDataOnchain.forEach(entry => {candleSeries.update(entry)}); 
+            
+            //setInterval(function() {
+                
+                //console.log(lastBlocks)
+                //let last = lastBlocks.pop()
+                //console.log("DATAS ONCHAIN",graphDataOnchain)
+                //JSON.toString(graphDataOnchain)
+                 
+                //
+            //}, 10000);
+        })
+    }
 
     
     
     
 
     function PairName() {
-        const pairName = getPairNameByTokenId(token0,token1)
+        const pair = getPairByTokenName(token0,token1)
         return(
-            <span>{pairName}</span>
+            <span>{pair.name}</span>
         )
     }
    

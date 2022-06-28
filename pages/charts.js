@@ -11,7 +11,7 @@ export default function App(props) {
     
     return (
         <>
-            <Chart {...props} source="acala" timeframe="15Mn" token0="DOT" token1="lc://13" dec ="1" />
+            <Chart {...props} source="acala" timeframe="15Mn" token0="DOT" token1="LCDOT" dec ="1" />
         </>
     );  
 }
