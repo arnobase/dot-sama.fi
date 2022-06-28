@@ -65,7 +65,7 @@ function Chart(props) {
         //console.log("USE_EFFECT POOL DATA",pooldata)
         //candleSeries.setData(pooldata);
         setCandleSeries(candleSeries)
-        
+        //load("Block")
         return () => {
             // Nettoyage 
 			window.removeEventListener('resize', handleResize);
@@ -73,6 +73,8 @@ function Chart(props) {
         };
 
     }, []);
+
+
 
     function load(tf=timeframe) {
         
@@ -82,24 +84,25 @@ function Chart(props) {
             setDate(dataSubquery[dataSubquery.length-1].datetime)
             console.log("DATA SUBQUERY",dataSubquery);
             //candleSeries.setData(pooldata);
-            candleSeries.setData(dataSubquery);
-            console.log("lastblock subquery acala",lastBlockData["subquery"]['acala'])
-
+            let graphDataSubquery = convertJsonDataToChartEntries(dataSubquery,"subquery",source)
+            candleSeries.setData(graphDataSubquery);
+            //("lastblock subquery acala",lastBlockData["subquery"]['acala'])
+            console.log("GRAPHDATAS SUBQUERY",graphDataSubquery)
             //getOnchainPoolData("acala","Block","DOT","LCDOT",2,lastBlockData["subquery"]['acala'],null).then( () => {
-            getOnchainPoolData("acala","Block","DOT","LCDOT",2,null,null,10).then( (dataOnchain) => {
+            getOnchainPoolData("acala","Block","DOT","LCDOT",2,lastBlockData["subquery"]['acala']).then( (dataOnchain) => {
                 setLastBlockOnchainAcala(lastBlockData["onchain"]['acala'])
-                let graphData = convertJsonDataToChartEntries(dataOnchain,"onchain","acala")
+                let graphDataOnchain = convertJsonDataToChartEntries(dataOnchain,"onchain","acala")
                 //setPoolData(graphData); 
                 //console.log("CANDLESERIE",candleSeries)
-                console.log("GRAPHDATA ONCHAIN",graphData)
-                graphData.forEach(entry => {candleSeries.update(entry)}); 
+                console.log("GRAPHDATA ONCHAIN",graphDataOnchain)
+                graphDataOnchain.forEach(entry => {candleSeries.update(entry)}); 
                 
                 //setInterval(function() {
                     
                     //console.log(lastBlocks)
                     //let last = lastBlocks.pop()
-                    console.log("DATAS ONCHAIN",JSON.stringify(graphData))
-                    JSON.toString(graphData)
+                    console.log("DATAS ONCHAIN",graphDataOnchain)
+                    JSON.toString(graphDataOnchain)
                      
                     //
                 //}, 10000);
