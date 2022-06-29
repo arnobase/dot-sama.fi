@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Box from '@mui/material/Box';
 import { createChart, CrosshairMode } from "lightweight-charts";
-import {getSubqueryPoolData,getOnchainPoolData,lastBlockData,convertJsonDataToChartEntries} from '../lib/get-pooldata'
+import {getSubqueryPoolData,getOnchainPoolData,lastBlockData,convertJsonDataToChartEntries, getOnchainPoolDataMultirequest} from '../lib/get-pooldata'
 import {getSubstrateAPI} from '../lib/substrate-apis'
 import {getPairByTokenName, getPairByTokenId} from '../lib/pairs'
 import store from '../lib/store';
@@ -66,7 +66,7 @@ function Chart(props) {
         //candleSeries.setData(pooldata);
         setCandleSeries(cs)
         console.log("candleSeries",candleSeries,cs)
-        //if (!loaded) {load("Block",cs);loaded=true;}
+        if (!loaded) {load("Block",cs);loaded=true;}
         return () => {
             // Nettoyage 
 			window.removeEventListener('resize', handleResize);
@@ -92,7 +92,9 @@ function Chart(props) {
                 //("lastblock subquery acala",lastBlockData["subquery"]['acala'])
                 console.log("GRAPHDATAS SUBQUERY",graphDataSubquery)
                 //getOnchainPoolData("acala","Block","DOT","LCDOT",2,lastBlockData["subquery"]['acala'],null).then( () => {
-                loadOnchain(tf,cs)
+                if (pair.types.includes("onchain")) {
+                    loadOnchain(tf,cs)
+                }
             }); 
         } else if (pair.types.includes("onchain")) {
             loadOnchain(tf,cs)
@@ -102,7 +104,7 @@ function Chart(props) {
 
     function loadOnchain(tf=timeframe,cs=candleSeries) {
         let pair = getPairByTokenName(token0,token1)
-        getOnchainPoolData(source,tf,pair.token0name,pair.token1name,pair.dec,lastBlockData["subquery"]['acala']).then( (dataOnchain) => {
+        getOnchainPoolDataMultirequest(source,tf,pair.token0name,pair.token1name,pair.dec,lastBlockData["subquery"]['acala']).then( (dataOnchain) => {
             setLastBlockOnchainAcala(lastBlockData["onchain"][source])
             let graphDataOnchain = convertJsonDataToChartEntries(dataOnchain,"onchain",source)
             //setPoolData(graphData); 
@@ -121,10 +123,6 @@ function Chart(props) {
             //}, 10000);
         })
     }
-
-    
-    
-    
 
     function PairName() {
         const pair = getPairByTokenName(token0,token1)
