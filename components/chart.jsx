@@ -65,8 +65,8 @@ function Chart(props) {
         //console.log("USE_EFFECT POOL DATA",pooldata)
         //candleSeries.setData(pooldata);
         setCandleSeries(cs)
-        console.log("candleSeries",candleSeries,cs)
-        if (!loaded) {load("Block",cs);loaded=true;}
+        //console.log("candleSeries",candleSeries,cs)
+        //if (!loaded) {load("Block",cs);loaded=true;}
         return () => {
             // Nettoyage 
 			window.removeEventListener('resize', handleResize);
@@ -78,19 +78,19 @@ function Chart(props) {
     function load(tf=timeframe,cs=candleSeries) {
         
         let pair = getPairByTokenName(token0,token1)
-        console.log("PAIR",pair)
+        //console.log("PAIR",pair)
         if (pair.types.includes("subquery")) {
             getSubqueryPoolData(source,tf,pair.token0id,pair.token1id,pair.dec,refLimit.current.value).then((dataSubquery)=>{
                 setLastBlockSubqueryAcala(lastBlockData["subquery"]['acala'])
                 setPoolData(dataSubquery); 
                 setDate(dataSubquery[dataSubquery.length-1].datetime)
-                console.log("DATA SUBQUERY",dataSubquery);
+                //console.log("DATA SUBQUERY",dataSubquery);
                 //candleSeries.setData(pooldata);
                 let graphDataSubquery = convertJsonDataToChartEntries(dataSubquery,"subquery",source)
-                console.log("candleSeries2",candleSeries)
+                //console.log("candleSeries2",candleSeries)
                 cs.setData(graphDataSubquery);
                 //("lastblock subquery acala",lastBlockData["subquery"]['acala'])
-                console.log("GRAPHDATAS SUBQUERY",graphDataSubquery)
+                //console.log("GRAPHDATAS SUBQUERY",graphDataSubquery)
                 //getOnchainPoolData("acala","Block","DOT","LCDOT",2,lastBlockData["subquery"]['acala'],null).then( () => {
                 if (pair.types.includes("onchain")) {
                     loadOnchain(tf,cs)
@@ -104,23 +104,24 @@ function Chart(props) {
 
     function loadOnchain(tf=timeframe,cs=candleSeries) {
         let pair = getPairByTokenName(token0,token1)
-        getOnchainPoolDataMultirequest(source,tf,pair.token0name,pair.token1name,pair.dec,lastBlockData["subquery"]['acala']).then( (dataOnchain) => {
+        let last_block = Math.max(lastBlockData["subquery"]['acala'],lastBlockData["onchain"]['acala'])
+        getOnchainPoolData(source,tf,pair.token0name,pair.token1name,pair.dec,last_block).then( (dataOnchain) => {
             setLastBlockOnchainAcala(lastBlockData["onchain"][source])
             let graphDataOnchain = convertJsonDataToChartEntries(dataOnchain,"onchain",source)
             //setPoolData(graphData); 
             //console.log("CANDLESERIE",candleSeries)
-            console.log("GRAPHDATA ONCHAIN",graphDataOnchain)
-            graphDataOnchain.forEach(entry => {cs.update(entry)}); 
+            //console.log("GRAPHDATA ONCHAIN",graphDataOnchain)
+            let prevEntry;
+            graphDataOnchain.forEach(entry => {
+                cs.update(entry)
+                prevEntry=entry;
+            }); 
             
-            //setInterval(function() {
-                
-                //console.log(lastBlocks)
-                //let last = lastBlocks.pop()
-                //console.log("DATAS ONCHAIN",graphDataOnchain)
-                //JSON.toString(graphDataOnchain)
-                 
-                //
-            //}, 10000);
+            /*
+            setInterval(function() {
+                loadOnchain(tf,cs)
+            }, 2000);
+            */
         })
     }
 
