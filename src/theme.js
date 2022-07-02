@@ -6,6 +6,7 @@ const theme = createTheme({
   palette: {
     primary: {
       main: '#556cd6',
+      contrastText: "#fff",
     },
     secondary: {
       main: '#19857b',
@@ -14,6 +15,13 @@ const theme = createTheme({
       main: red.A400,
     },
   },
+  overrides: {
+    MuiButton: {
+      raisedPrimary: {
+        color: 'white',
+      },
+    },
+  }
 });
 
 export default theme;

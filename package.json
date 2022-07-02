@@ -23,7 +23,8 @@
     "next": "latest",
     "prop-types": "latest",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "sass": "^1.53.0"
   },
   "devDependencies": {
     "eslint": "latest",
