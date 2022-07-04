@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Tooltip from '@mui/material/Tooltip';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import Image from 'next/image'
 import { createChart, CrosshairMode } from "lightweight-charts";
 import {getSubqueryPoolData,getOnchainPoolData,lastBlockData,convertJsonDataToChartEntries, getOnchainPoolDataMultirequest} from '../lib/get-pooldata'
@@ -33,6 +39,13 @@ function Chart(props) {
     let loaded=false;
 
     useEffect(() => {
+
+        const handleResize = () => {
+            console.log("resize")
+            chart.current.applyOptions({ width: ref.current.clientWidth });
+        }; 
+        window.addEventListener('resize', handleResize);
+
         const chartOptions = { 
             width: ref.current.clientWidth, 
             height: 300,
@@ -60,11 +73,6 @@ function Chart(props) {
                 secondsVisible: true,
             },
         };
-        const handleResize = () => {
-            console.log("resize")
-            chart.current.applyOptions({ width: ref.current.clientWidth });
-        }; 
-        window.addEventListener('resize', handleResize);
 
         chart.current = createChart(ref.current, chartOptions);
         let cs = chart.current.addCandlestickSeries({
@@ -123,6 +131,7 @@ function Chart(props) {
         setCandleSeries(cs)
         //console.log("candleSeries",candleSeries,cs)
         if (!loaded) {load("Block");loaded=true;}
+
         return () => {
             // Nettoyage 
 			window.removeEventListener('resize', handleResize);
@@ -146,18 +155,17 @@ function Chart(props) {
     }, [graphData,candleSeries]);
 
 
-    function load(tf=propTimeframe,t0=propToken0,t1=propToken1) {
-        
+    function load(tf=propTimeframe) {
+        let t0=propToken0
+        let t1=propToken1
         let pair = getPairByTokenName(t0,t1)
         let src = pair.sources[0]
-        console.log("LOAD\n\n\n##########")
         setTimeframe(tf);
-        console.log("t0:t1",t0,t1)
         setSource(src);
-        setToken0(t0);
-        setToken1(t1);
-      
-        //console.log("PAIR",pair)
+
+        console.log("t0:t1",t0,t1)
+        console.log("Load PAIR:",pair)
+        
         if (pair.types.includes("subquery")) {
             getSubqueryPoolData(src,tf,pair,refLimit.current.value).then((dataSubquery)=>{
                 setLastBlockSubquery(lastBlockData["subquery"][src])
@@ -172,7 +180,7 @@ function Chart(props) {
                 setGraphData(graphDataSubquery)
                 //candleSeries.setData(graphDataSubquery);
                 //("lastblock subquery acala",lastBlockData["subquery"]['acala'])
-                //console.log("GRAPHDATAS SUBQUERY",graphDataSubquery)
+                console.log("GRAPHDATAS SUBQUERY",graphDataSubquery)
                 //getOnchainPoolData("acala","Block","DOT","LCDOT",2,lastBlockData["subquery"]['acala'],null).then( () => {
                 if (pair.types.includes("onchain")) {
                     loadOnchain(tf,src,pair,false)
@@ -220,14 +228,19 @@ function Chart(props) {
         })
     }
 
+    // Inversion des tokens dans la fonction loadPair, avant l'appel de load
     function loadPair(token0,token1){
         const pair = getPairByTokenName(token0,token1)
-        console.log("PAIR",pair)
-        load("Block",pair.token0name,pair.token1name)
+        console.log("loadPair pair:",pair)
+        let t0name = pair.rev ? pair.token1name : pair.token0name
+        let t1name = pair.rev ? pair.token0name : pair.token1name
+        setToken0(t0name)
+        setToken1(t1name)
+        load(propTimeframe)
     }
 
-    function PairName() {
-        const pair = getPairByTokenName(token0,token1)
+    function PairName(props) {
+        const pair = getPairByTokenName(props.t0,props.t1)
         const source = pair.sources[0]
         return(
             <span className="pair-name">
@@ -236,20 +249,39 @@ function Chart(props) {
         )
     }
    
+    const handleChange = (event) => {
+        setAge(event.target.value);
+    };
+
     return (  
         <Box className="graph-wrapper">
             <Box ref={ref}>
                 <Box sx={{pb:1}}>
-                    <PairName/>
+                    <FormControl fullWidth>
+                        <InputLabel id="pair-select-label">Age</InputLabel>
+                        <Select
+                            labelId="pair-select-label"
+                            id="pair-select"
+                            value={`${propToken0}/${propToken1}`}
+                            label="Pair"
+                            onChange={handleChange}
+                        >
+                            <MenuItem value="DOT/LCDOT">DOT/LCDOT</MenuItem>
+                            <MenuItem value="LCDOT/DOT">LCDOT/DOT</MenuItem>
+                            <MenuItem value="DOT/cDOT613">DOT/cDOT613</MenuItem>
+                        </Select>
+                    </FormControl>
+                    <PairName t0={propToken0} t1={propToken1} />
                     <Box component="span" className="graph-options">
+                        <Tooltip title="Reverse pair"><Button onClick={() => {loadPair(propToken1,propToken0)}}><CompareArrowsIcon /></Button></Tooltip>
                         {/*<input className="req-limit" ref={refLimit} type="text" defaultValue="200"></input>*/}
-                        <Button onClick={() => {load("Day")}}>D</Button>
-                        <Button onClick={() => load("Hour")}>H</Button>
-                        <Button onClick={() => load("15Mn")}>15m</Button>
-                        <Button onClick={() => load("1Mn")}>1m</Button>
-                        <Button onClick={() => load("Block")}>B</Button>
+                        <Tooltip title="Day"><Button onClick={() => {load("Day")}}>D</Button></Tooltip>
+                        <Tooltip title="Hour"><Button onClick={() => load("Hour")}>H</Button></Tooltip>
+                        <Tooltip title="15 minutes"><Button onClick={() => load("15Mn")}>15m</Button></Tooltip>
+                        <Tooltip title="1 minute"><Button onClick={() => load("1Mn")}>1m</Button></Tooltip>
+                        <Tooltip title="Block"><Button onClick={() => load("Block")}>B</Button></Tooltip>
                         {/*<Button onClick={() => loadPair("DOT","cDOT613")}>Parallel</Button>*/}
-                        <Button onClick={() => loadPair("LCDOT","DOT")}>LCDOT/DOT</Button>
+                        <Tooltip title="LCDOT/DOT"><Button onClick={() => loadPair("LCDOT","DOT")}>LCDOT/DOT</Button></Tooltip>
                     </Box>
                     <Box style={{float:"right"}} className="graph-legend">
                         <BlockNumber type="onchain" blocknumber={lastblockOnchain}></BlockNumber>
