@@ -18,7 +18,7 @@ function Chart(props) {
 	} = props;
     const chart = React.useRef();
     const ref = React.useRef();
-    const refLimit = React.useRef()
+    const refLimit = React.useRef(200)
     const [pooldata, setPoolData] = useState([]);
     const [graphData, setGraphData] = useState();
     const [update, setUpdate] = useState(false);
@@ -146,14 +146,17 @@ function Chart(props) {
     }, [graphData,candleSeries]);
 
 
-    function load(tf=propTimeframe,src=propSource,t0=propToken0,t1=propToken1) {
+    function load(tf=propTimeframe,t0=propToken0,t1=propToken1) {
+        
+        let pair = getPairByTokenName(t0,t1)
+        let src = pair.sources[0]
         console.log("LOAD\n\n\n##########")
         setTimeframe(tf);
-        console.log("propTimeframe",propTimeframe)
+        console.log("t0:t1",t0,t1)
         setSource(src);
         setToken0(t0);
         setToken1(t1);
-        let pair = getPairByTokenName(t0,t1)
+      
         //console.log("PAIR",pair)
         if (pair.types.includes("subquery")) {
             getSubqueryPoolData(src,tf,pair,refLimit.current.value).then((dataSubquery)=>{
@@ -162,7 +165,7 @@ function Chart(props) {
                 setDate(dataSubquery[dataSubquery.length-1].datetime)
                 //console.log("DATA SUBQUERY",dataSubquery);
                 //candleSeries.setData(pooldata);
-                let graphDataSubquery = convertJsonDataToChartEntries(dataSubquery,"subquery",src)
+                let graphDataSubquery = convertJsonDataToChartEntries(dataSubquery,"subquery",src,pair.rev)
                 //console.log("candleSeries2",candleSeries)
                 let lastData = graphDataSubquery[graphDataSubquery.length-1]
                 console.log("LASTDATA",lastData)
@@ -188,9 +191,10 @@ function Chart(props) {
         if (lastBlockData["subquery"][src] !== undefined) {arrayLastBlocks.push(lastBlockData["subquery"][src])}
         if (lastBlockData["onchain"][src] !== undefined) {arrayLastBlocks.push(lastBlockData["onchain"][src])}
         let last_block = Math.max(...arrayLastBlocks)
-        getOnchainPoolData(src,tf,pair,last_block,null,500,50).then( (dataOnchain) => {
+        getOnchainPoolData(src,tf,pair,last_block,null,200,10).then( (dataOnchain) => {
             setLastBlockOnchain(lastBlockData["onchain"][src])
-            let graphDataOnchain = convertJsonDataToChartEntries(dataOnchain,"onchain",src)
+            let graphDataOnchain = convertJsonDataToChartEntries(dataOnchain,"onchain",src,pair.rev)
+            console.log("graphDataOnchain",graphDataOnchain,pair.rev)
             if (init){
                 setGraphData(graphDataSubquery)
                 //candleSeries.setData(graphDataOnchain);
@@ -219,7 +223,7 @@ function Chart(props) {
     function loadPair(token0,token1){
         const pair = getPairByTokenName(token0,token1)
         console.log("PAIR",pair)
-        load("Block",pair.sources[0],pair.token0name,pair.token1name)
+        load("Block",pair.token0name,pair.token1name)
     }
 
     function PairName() {
@@ -237,6 +241,16 @@ function Chart(props) {
             <Box ref={ref}>
                 <Box sx={{pb:1}}>
                     <PairName/>
+                    <Box component="span" className="graph-options">
+                        {/*<input className="req-limit" ref={refLimit} type="text" defaultValue="200"></input>*/}
+                        <Button onClick={() => {load("Day")}}>D</Button>
+                        <Button onClick={() => load("Hour")}>H</Button>
+                        <Button onClick={() => load("15Mn")}>15m</Button>
+                        <Button onClick={() => load("1Mn")}>1m</Button>
+                        <Button onClick={() => load("Block")}>B</Button>
+                        {/*<Button onClick={() => loadPair("DOT","cDOT613")}>Parallel</Button>*/}
+                        <Button onClick={() => loadPair("LCDOT","DOT")}>LCDOT/DOT</Button>
+                    </Box>
                     <Box style={{float:"right"}} className="graph-legend">
                         <BlockNumber type="onchain" blocknumber={lastblockOnchain}></BlockNumber>
                         <BlockNumber type="subquery" blocknumber={lastblockSubquery}></BlockNumber>
@@ -244,15 +258,7 @@ function Chart(props) {
                 </Box>
             </Box>
             
-            <Box display="flex" justifyContent="flex-end" className="graph-options">
-                <input className="req-limit" ref={refLimit} type="text" defaultValue="200"></input>
-                <Button onClick={() => {load("Day")}}>D</Button>
-                <Button onClick={() => load("Hour")}>H</Button>
-                <Button onClick={() => load("15Mn")}>15m</Button>
-                <Button onClick={() => load("1Mn")}>1m</Button>
-                <Button onClick={() => load("Block")}>B</Button>
-                <Button onClick={() => loadPair("DOT","cDOT613")}>Parallel</Button>
-            </Box>
+            
             
         </Box>
     );
