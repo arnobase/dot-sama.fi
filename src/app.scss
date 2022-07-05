@@ -1,6 +1,6 @@
 body {
-    background-color: rgb(25,27,36);
-	color:#b8b8b8
+    background-color: #191b24;
+	color:#bebebe
 }
 .active {
     background-color: white;
@@ -26,8 +26,12 @@ body {
 .floating-tooltip .block {
     font-weight: bold;
 }
-.pair-select ul, .pair-select li {
-	background-color: #050505;
+.pair-select, .pair-select.Mui-focused {
+	border-color: 'transparent';
+	border: none;
+	ul, li {
+		background-color: #050505;
+	}
 }
 .pair-name {
 	padding: 0 12px 0 0;

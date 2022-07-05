@@ -263,22 +263,17 @@ function Chart(props) {
         <Box className="graph-wrapper">
             <Box ref={ref}>
                 <Box sx={{pb:1}}>
-                    <FormControl fullWidth>
-                        <InputLabel id="pair-select-label">Age</InputLabel>
+                    <FormControl>
                         <Select
                             className="pair-select"
-                            labelId="pair-select-label"
                             id="pair-select"
                             value={`${propToken0}/${propToken1}`}
-                            label="Pair"
-                            onChange={handleChange}
-                        >
+                            onChange={handleChange} >
                             <MenuItem value="DOT/LCDOT"><PairName t0="DOT" t1="LCDOT" /></MenuItem>
                             <MenuItem value="LCDOT/DOT"><PairName t0="LCDOT" t1="DOT" /></MenuItem>
                             <MenuItem value="DOT/cDOT613"><PairName t0="DOT" t1="cDOT613" /></MenuItem>
                         </Select>
                     </FormControl>
-                    <PairName t0={propToken0} t1={propToken1} />
                     <Box component="span" className="graph-options">
                         <Tooltip title="Reverse pair"><Button onClick={() => {loadPair(propToken1,propToken0)}}><CompareArrowsIcon /></Button></Tooltip>
                         {/*<input className="req-limit" ref={refLimit} type="text" defaultValue="200"></input>*/}
@@ -287,8 +282,6 @@ function Chart(props) {
                         <Tooltip title="15 minutes"><Button onClick={() => load("15Mn")}>15m</Button></Tooltip>
                         <Tooltip title="1 minute"><Button onClick={() => load("1Mn")}>1m</Button></Tooltip>
                         <Tooltip title="Block"><Button onClick={() => load("Block")}>B</Button></Tooltip>
-                        {/*<Button onClick={() => loadPair("DOT","cDOT613")}>Parallel</Button>*/}
-                        <Tooltip title="LCDOT/DOT"><Button onClick={() => loadPair("LCDOT","DOT")}>LCDOT/DOT</Button></Tooltip>
                     </Box>
                     <Box style={{float:"right"}} className="graph-legend">
                         <BlockNumber type="onchain" blocknumber={lastblockOnchain}></BlockNumber>

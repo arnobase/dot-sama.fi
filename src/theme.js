@@ -1,5 +1,6 @@
 import { createTheme } from '@mui/material/styles';
 import { red } from '@mui/material/colors';
+import { height } from '@mui/system';
 
 // Create a theme instance.
 const theme = createTheme({
@@ -15,28 +16,51 @@ const theme = createTheme({
       main: red.A400,
     },
   },
-  overrides: {
-    MuiButton: {
-      raisedPrimary: {
-        color: 'white',
-      },
-    },
+  components: {
     MuiSelect: {
-      '& .MuiMenuItem-root': {
-        backgroundColor: 'black',
+      styleOverrides: {
+        root:{
+          backgroundColor: 'transparent',
+          color: '#bebebe',
+        },
       },
     },
     MuiMenu: {
-      list: {
-          backgroundColor: "#cccccc",
+      styleOverrides: {
+        list: {
+            backgroundColor: '#191b24',
+        },
+      },
+    },
+    MuiList: {
+      styleOverrides: {
+        root: {
+            backgroundColor: '#191b24',
+            color: '#bebebe',
+        },
       },
     },
     // Applied to the <li> elements
     MuiMenuItem: {
+      styleOverrides: {
         root: {
-            fontSize: 12,
+            backgroundColor: '#191b24',
         },
+      },
     },
+    MuiOutlinedInput:  {
+      styleOverrides: {
+        root: {
+          borderColor: 'transparent',
+        },
+        input: {
+          borderColor: 'transparent',
+          padding: '3px 0 2px 2px',
+          height: 'inherit'
+        }
+      }
+    }
+    
   }
 });
 
