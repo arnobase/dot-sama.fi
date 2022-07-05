@@ -244,13 +244,19 @@ function Chart(props) {
         const source = pair.sources[0]
         return(
             <span className="pair-name">
-                <img src={"/img/logos/"+source+".png"} /><span>{pair.name}</span>
+                <img src={"/img/logos/"+source+".png"} width="15" height="15" /><span>{pair.name}</span>
             </span>
         )
     }
    
     const handleChange = (event) => {
-        setAge(event.target.value);
+        let split = event.target.value.split("/")
+        console.log("SPLIT",split)
+        let t0 = split[0]
+        let t1 = split[1]
+        setToken0(t0)
+        setToken1(t1)
+        loadPair(t0,t1);
     };
 
     return (  
@@ -260,15 +266,16 @@ function Chart(props) {
                     <FormControl fullWidth>
                         <InputLabel id="pair-select-label">Age</InputLabel>
                         <Select
+                            className="pair-select"
                             labelId="pair-select-label"
                             id="pair-select"
                             value={`${propToken0}/${propToken1}`}
                             label="Pair"
                             onChange={handleChange}
                         >
-                            <MenuItem value="DOT/LCDOT">DOT/LCDOT</MenuItem>
-                            <MenuItem value="LCDOT/DOT">LCDOT/DOT</MenuItem>
-                            <MenuItem value="DOT/cDOT613">DOT/cDOT613</MenuItem>
+                            <MenuItem value="DOT/LCDOT"><PairName t0="DOT" t1="LCDOT" /></MenuItem>
+                            <MenuItem value="LCDOT/DOT"><PairName t0="LCDOT" t1="DOT" /></MenuItem>
+                            <MenuItem value="DOT/cDOT613"><PairName t0="DOT" t1="cDOT613" /></MenuItem>
                         </Select>
                     </FormControl>
                     <PairName t0={propToken0} t1={propToken1} />

@@ -21,6 +21,22 @@ const theme = createTheme({
         color: 'white',
       },
     },
+    MuiSelect: {
+      '& .MuiMenuItem-root': {
+        backgroundColor: 'black',
+      },
+    },
+    MuiMenu: {
+      list: {
+          backgroundColor: "#cccccc",
+      },
+    },
+    // Applied to the <li> elements
+    MuiMenuItem: {
+        root: {
+            fontSize: 12,
+        },
+    },
   }
 });
 
