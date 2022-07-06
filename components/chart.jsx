@@ -12,7 +12,7 @@ import Image from 'next/image'
 import { createChart, CrosshairMode } from "lightweight-charts";
 import {getSubqueryPoolData,getOnchainPoolData,lastBlockData,convertJsonDataToChartEntries, getOnchainPoolDataMultirequest} from '../lib/get-pooldata'
 import {getSubstrateAPI} from '../lib/substrate-apis'
-import {getPairByTokenName, getAllPairs} from '../lib/pairs'
+import {getPairByTokenName, getAllPairsWithRev} from '../lib/pairs'
 import store from '../lib/store';
 
 function Chart(props) {
@@ -43,7 +43,7 @@ function Chart(props) {
     useEffect(() => {
 
         const handleResize = () => {
-            console.log("resize")
+
             chart.current.applyOptions({ width: ref.current.clientWidth });
         }; 
         window.addEventListener('resize', handleResize);
@@ -96,15 +96,14 @@ function Chart(props) {
 
         // update tooltip
         chart.current.subscribeCrosshairMove(function(param) {
-            console.log(propTimeframe)
             if (propTimeframe !== "Block" || !param.time || param.point.x < 0 || param.point.x > width || param.point.y < 0 || param.point.y > height) {
                 toolTip.style.display = 'none';
                 return;
             }
-            console.log(store)
+
             var id = token0+"/"+token1+"-"+param.time
             var tooltipBlockNumber = store.getByIdInPair("PoolBlockData",id).blockNumber
-            console.log("tooltipBlockNumber",tooltipBlockNumber)
+    
             if (tooltipBlockNumber === undefined) {
                 toolTip.style.display = 'none';
                 return;
@@ -128,11 +127,14 @@ function Chart(props) {
         });
         
 
-        //console.log("USE_EFFECT POOL DATA",pooldata)
+
         //candleSeries.setData(pooldata);
         setCandleSeries(cs)
-        //console.log("candleSeries",candleSeries,cs)
+
         if (!loaded) {
+
+            //let all_pairs = getAllPairsWithRev();
+
             setPairName(token0+"/"+token1)
             load("Block");
             loaded=true;
@@ -149,12 +151,10 @@ function Chart(props) {
     useEffect(() => {
         if (chart.current !== undefined && candleSeries !== undefined && graphData !== undefined && update === false) {
             //load("Block")
-            console.log(candleSeries)
             candleSeries.setData(graphData);
         }
         if (chart.current !== undefined && candleSeries !== undefined && graphData !== undefined && update === true) {
             //load("Block")
-            console.log(candleSeries)
             candleSeries.update(graphData);
             setUpdate(false)
         }
@@ -165,24 +165,23 @@ function Chart(props) {
         let t0=propToken0
         let t1=propToken1
         let pair = getPairByTokenName(t0,t1)
+        console.log("LAOD---",pair)
         let src = pair.sources[0]
         setTimeframe(tf);
         setSource(src);
 
-        console.log("t0:t1",t0,t1)
-        console.log("Load PAIR:",pair)
         
         if (pair.types.includes("subquery")) {
             getSubqueryPoolData(src,tf,pair,refLimit.current.value).then((dataSubquery)=>{
                 setLastBlockSubquery(lastBlockData["subquery"][src])
                 setPoolData(dataSubquery); 
                 setDate(dataSubquery[dataSubquery.length-1].datetime)
-                //console.log("DATA SUBQUERY",dataSubquery);
+
                 //candleSeries.setData(pooldata);
                 let graphDataSubquery = convertJsonDataToChartEntries(dataSubquery,"subquery",src,pair.rev)
-                //console.log("candleSeries2",candleSeries)
+    
                 let lastData = graphDataSubquery[graphDataSubquery.length-1]
-                console.log("LASTDATA",lastData)
+        
                 setGraphData(graphDataSubquery)
                 //candleSeries.setData(graphDataSubquery);
                 //("lastblock subquery acala",lastBlockData["subquery"]['acala'])
@@ -208,7 +207,6 @@ function Chart(props) {
         getOnchainPoolData(src,tf,pair,last_block,null,200,10).then( (dataOnchain) => {
             setLastBlockOnchain(lastBlockData["onchain"][src])
             let graphDataOnchain = convertJsonDataToChartEntries(dataOnchain,"onchain",src,pair.rev)
-            console.log("graphDataOnchain",graphDataOnchain,pair.rev)
             if (init){
                 setGraphData(graphDataSubquery)
                 //candleSeries.setData(graphDataOnchain);
@@ -238,8 +236,8 @@ function Chart(props) {
     function loadPair(token0,token1){
         const pair = getPairByTokenName(token0,token1)
         console.log("loadPair pair:",pair)
-        let t0name = pair.rev ? pair.token1name : pair.token0name
-        let t1name = pair.rev ? pair.token0name : pair.token1name
+        let t0name = pair.token0name
+        let t1name = pair.token1name
         setToken0(t0name)
         setToken1(t1name)
         setPairName(t0name+"/"+t1name)
@@ -247,6 +245,7 @@ function Chart(props) {
     }
 
     function PairName(props) {
+        console.log("function PairName")
         const pair = getPairByTokenName(props.t0,props.t1)
         const source = pair.sources[0]
         return(
@@ -258,7 +257,6 @@ function Chart(props) {
    
     const handleChange = (event) => {
         let split = event.target.value.split("/")
-        console.log("SPLIT",split)
         let t0 = split[0]
         let t1 = split[1]
         setToken0(t0)
@@ -266,18 +264,25 @@ function Chart(props) {
         loadPair(t0,t1);
     };
 
-    function PairItems() {
+    function SelectPair() {
         let res=[];
-        let all_pairs = getAllPairs();
+        let all_pairs = getAllPairsWithRev();
         console.log("ALL PAIRS################\n\n\n##############",all_pairs)
         all_pairs.forEach(pair => {
-            let t0 = pair.rev ? pair.token1name : pair.token0name;
-            let t1 = pair.rev ? pair.token0name : pair.token1name;
+            let t0 = pair.token0name;
+            let t1 = pair.token1name;
             let rev_class = pair.rev ? 'pair-rev' : ''
-            res.push(<MenuItem value={`${pair.name}`} className={rev_class}><PairName t0={`${t0}`} t1={`${t1}`} /></MenuItem>)
+            res.push(<MenuItem key={`${pair.name}`} value={`${pair.name}`} className={rev_class}><PairName t0={`${t0}`} t1={`${t1}`} /></MenuItem>)
         });
-        console.log(res)
-        return (<>{res}</>)
+        return(
+            <Select
+                className="pair-select"
+                id="pair-select"
+                value={propPairName}
+                onChange={handleChange} >
+                    {res}
+            </Select>
+        )
     }
 
     return (  
@@ -285,17 +290,7 @@ function Chart(props) {
             <Box ref={ref}>
                 <Box sx={{pb:1}}>
                     
-                        <Select
-                            className="pair-select"
-                            id="pair-select"
-                            value={propPairName}
-                            onChange={handleChange} >
-                                    <MenuItem value="DOT/LCDOT"><PairName t0="DOT" t1="LCDOT" /></MenuItem>
-                                    <MenuItem value="LCDOT/DOT"><PairName t0="LCDOT" t1="DOT" /></MenuItem>
-                                    <MenuItem value="DOT/cDOT613"><PairName t0="DOT" t1="cDOT613" /></MenuItem>
-                                    <MenuItem value="cDOT613/DOT" ><PairName t0="cDOT613" t1="DOT" /></MenuItem>
-                            
-                        </Select>
+                    <SelectPair/>    
                     
                     <Box component="span" className="graph-options">
                         <Tooltip title="Reverse pair"><Button onClick={() => {loadPair(propToken1,propToken0)}}><CompareArrowsIcon /></Button></Tooltip>
