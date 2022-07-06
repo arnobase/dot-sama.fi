@@ -5,13 +5,14 @@ import Tooltip from '@mui/material/Tooltip';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
+
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import Image from 'next/image'
 import { createChart, CrosshairMode } from "lightweight-charts";
 import {getSubqueryPoolData,getOnchainPoolData,lastBlockData,convertJsonDataToChartEntries, getOnchainPoolDataMultirequest} from '../lib/get-pooldata'
 import {getSubstrateAPI} from '../lib/substrate-apis'
-import {getPairByTokenName, getPairByTokenId} from '../lib/pairs'
+import {getPairByTokenName, getAllPairs} from '../lib/pairs'
 import store from '../lib/store';
 
 function Chart(props) {
@@ -30,6 +31,7 @@ function Chart(props) {
     const [update, setUpdate] = useState(false);
     const [propSource, setSource] = useState(source);
     const [propTimeframe, setTimeframe] = useState(timeframe);
+    const [propPairName, setPairName] = useState("");
     const [propToken0, setToken0] = useState(token0);
     const [propToken1, setToken1] = useState(token1);
     const [candleSeries, setCandleSeries] = useState([]);
@@ -130,7 +132,11 @@ function Chart(props) {
         //candleSeries.setData(pooldata);
         setCandleSeries(cs)
         //console.log("candleSeries",candleSeries,cs)
-        if (!loaded) {load("Block");loaded=true;}
+        if (!loaded) {
+            setPairName(token0+"/"+token1)
+            load("Block");
+            loaded=true;
+        }
 
         return () => {
             // Nettoyage 
@@ -236,6 +242,7 @@ function Chart(props) {
         let t1name = pair.rev ? pair.token0name : pair.token1name
         setToken0(t0name)
         setToken1(t1name)
+        setPairName(t0name+"/"+t1name)
         load(propTimeframe)
     }
 
@@ -259,21 +266,37 @@ function Chart(props) {
         loadPair(t0,t1);
     };
 
+    function PairItems() {
+        let res=[];
+        let all_pairs = getAllPairs();
+        console.log("ALL PAIRS################\n\n\n##############",all_pairs)
+        all_pairs.forEach(pair => {
+            let t0 = pair.rev ? pair.token1name : pair.token0name;
+            let t1 = pair.rev ? pair.token0name : pair.token1name;
+            let rev_class = pair.rev ? 'pair-rev' : ''
+            res.push(<MenuItem value={`${pair.name}`} className={rev_class}><PairName t0={`${t0}`} t1={`${t1}`} /></MenuItem>)
+        });
+        console.log(res)
+        return (<>{res}</>)
+    }
+
     return (  
         <Box className="graph-wrapper">
             <Box ref={ref}>
                 <Box sx={{pb:1}}>
-                    <FormControl>
+                    
                         <Select
                             className="pair-select"
                             id="pair-select"
-                            value={`${propToken0}/${propToken1}`}
+                            value={propPairName}
                             onChange={handleChange} >
-                            <MenuItem value="DOT/LCDOT"><PairName t0="DOT" t1="LCDOT" /></MenuItem>
-                            <MenuItem value="LCDOT/DOT"><PairName t0="LCDOT" t1="DOT" /></MenuItem>
-                            <MenuItem value="DOT/cDOT613"><PairName t0="DOT" t1="cDOT613" /></MenuItem>
+                                    <MenuItem value="DOT/LCDOT"><PairName t0="DOT" t1="LCDOT" /></MenuItem>
+                                    <MenuItem value="LCDOT/DOT"><PairName t0="LCDOT" t1="DOT" /></MenuItem>
+                                    <MenuItem value="DOT/cDOT613"><PairName t0="DOT" t1="cDOT613" /></MenuItem>
+                                    <MenuItem value="cDOT613/DOT" ><PairName t0="cDOT613" t1="DOT" /></MenuItem>
+                            
                         </Select>
-                    </FormControl>
+                    
                     <Box component="span" className="graph-options">
                         <Tooltip title="Reverse pair"><Button onClick={() => {loadPair(propToken1,propToken0)}}><CompareArrowsIcon /></Button></Tooltip>
                         {/*<input className="req-limit" ref={refLimit} type="text" defaultValue="200"></input>*/}

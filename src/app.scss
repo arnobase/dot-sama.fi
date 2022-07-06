@@ -26,11 +26,14 @@ body {
 .floating-tooltip .block {
     font-weight: bold;
 }
-.pair-select, .pair-select.Mui-focused {
+fieldset.MuiOutlinedInput-notchedOutline {
+	display: none;
+}
+.pair-select {
 	border-color: 'transparent';
 	border: none;
 	ul, li {
-		background-color: #050505;
+		background-color: #26272b;
 	}
 }
 .pair-name {
@@ -41,6 +44,9 @@ body {
 		width: 18px;
 		height: 18px;
 	}
+}
+.pair-rev {
+	display:none;
 }
 .graph-wrapper {
     background-color: rgb(32,34,43);

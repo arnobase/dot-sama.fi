@@ -4,7 +4,7 @@ import { height } from '@mui/system';
 
 // Create a theme instance.
 const theme = createTheme({
-  palette: {
+  /*palette: {
     primary: {
       main: '#556cd6',
       contrastText: "#fff",
@@ -15,7 +15,7 @@ const theme = createTheme({
     error: {
       main: red.A400,
     },
-  },
+  },*/
   components: {
     MuiSelect: {
       styleOverrides: {
@@ -45,6 +45,9 @@ const theme = createTheme({
       styleOverrides: {
         root: {
             backgroundColor: '#191b24',
+            '&:hover': {
+                background: "#26272b",
+            },
         },
       },
     },
