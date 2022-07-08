@@ -148,6 +148,10 @@ function Chart(props) {
 
     }, []);
 
+    /** 
+     * useEffect qui déclenche la MAJ des data du graphique,
+     * apellé quand graphData est mis à jour
+    **/
     useEffect(() => {
         if (chart.current !== undefined && candleSeries !== undefined && graphData !== undefined && update === false) {
             //load("Block")
@@ -161,12 +165,10 @@ function Chart(props) {
     }, [graphData,candleSeries]);
 
 
-    function load(tf=propTimeframe) {
-        let t0=propToken0
-        let t1=propToken1
+    function load(tf=propTimeframe,t0=propToken0,t1=propToken1) {
         let pair = getPairByTokenName(t0,t1)
         console.log("LAOD---",pair)
-        let src = pair.sources[0]
+        let src = pair.source
         setTimeframe(tf);
         setSource(src);
 
@@ -188,27 +190,30 @@ function Chart(props) {
                 console.log("GRAPHDATAS SUBQUERY",graphDataSubquery)
                 //getOnchainPoolData("acala","Block","DOT","LCDOT",2,lastBlockData["subquery"]['acala'],null).then( () => {
                 if (pair.types.includes("onchain")) {
-                    loadOnchain(tf,src,pair,false)
+                    loadOnchain(tf,pair,false)
                 }
             }); 
         } else if (pair.types.includes("onchain")) {
             console.log("ONCHAIN")
-            loadOnchain(tf,src,pair,true)
+            loadOnchain(tf,pair,true)
         }
         
     }  
 
-    function loadOnchain(tf=timeframe,src=source,pair,init=false) {
-        //let pair = getPairByTokenName(t0,t1)
+    function loadOnchain(tf=timeframe,pair,init=false) {
+        let src=pair.source
         let arrayLastBlocks=[0]
         if (lastBlockData["subquery"][src] !== undefined) {arrayLastBlocks.push(lastBlockData["subquery"][src])}
         if (lastBlockData["onchain"][src] !== undefined) {arrayLastBlocks.push(lastBlockData["onchain"][src])}
         let last_block = Math.max(...arrayLastBlocks)
-        getOnchainPoolData(src,tf,pair,last_block,null,200,10).then( (dataOnchain) => {
+        console.log("LAST BLOCK "+pair.source,last_block)
+        getOnchainPoolData(pair,last_block,null,200,10).then( (dataOnchain) => {
+            console.log("DATAONCHAIN",dataOnchain)
             setLastBlockOnchain(lastBlockData["onchain"][src])
             let graphDataOnchain = convertJsonDataToChartEntries(dataOnchain,"onchain",src,pair.rev)
+            console.log("graphDataOnchain",graphDataOnchain)
             if (init){
-                setGraphData(graphDataSubquery)
+                setGraphData(graphDataOnchain)
                 //candleSeries.setData(graphDataOnchain);
             }
             else {
@@ -240,14 +245,14 @@ function Chart(props) {
         let t1name = pair.token1name
         setToken0(t0name)
         setToken1(t1name)
-        setPairName(t0name+"/"+t1name)
-        load(propTimeframe)
+        setPairName(pair.name)
+        load(propTimeframe,pair.token0name,pair.token1name)
     }
 
     function PairName(props) {
         console.log("function PairName")
         const pair = getPairByTokenName(props.t0,props.t1)
-        const source = pair.sources[0]
+        const source = pair.source
         return(
             <span className="pair-name">
                 <img src={"/img/logos/"+source+".png"} width="15" height="15" /><span>{pair.name}</span>
@@ -267,7 +272,7 @@ function Chart(props) {
     function SelectPair() {
         let res=[];
         let all_pairs = getAllPairsWithRev();
-        console.log("ALL PAIRS################\n\n\n##############",all_pairs)
+        console.log("ALL PAIRS##############",all_pairs)
         all_pairs.forEach(pair => {
             let t0 = pair.token0name;
             let t1 = pair.token1name;
