@@ -24,7 +24,8 @@
     "prop-types": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "sass": "^1.53.0"
+    "sass": "^1.53.0",
+    "spacetime": "^7.1.4"
   },
   "devDependencies": {
     "eslint": "latest",

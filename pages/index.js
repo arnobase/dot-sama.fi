@@ -1,24 +1,22 @@
-import * as React from 'react';
-import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import ProTip from '../src/ProTip';
-import Link from '../src/Link';
-import Copyright from '../src/Copyright';
+import React, { useEffect, useRef } from 'react';
+import dynamic from "next/dynamic";
+import { CircularProgress, Box } from '@mui/material';
+import store from '../lib/store';
+import Assets from '../components/assets';
 
-export default function Index() {
-  return (
-    <Container maxWidth="sm">
-      <Box sx={{ my: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Next.js example
-        </Typography>
-        <Link href="/charts" color="secondary">
-          Go to the charts page
-        </Link>
-        <ProTip />
-        <Copyright />
-      </Box>
-    </Container>
-  );
+const Chart = dynamic(() => import("../components/chart"), {
+  loading: () => <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+                    <CircularProgress />
+                </Box>,
+  ssr: false
+});
+
+export default function App(props) {
+    
+    return (
+        <>
+            <Assets />
+            {/*<Chart {...props} source="acala" timeframe="15Mn" token0="lcDOT" token1="DOT" />*/}
+        </>
+    );
 }

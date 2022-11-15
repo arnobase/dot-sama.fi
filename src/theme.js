@@ -23,6 +23,9 @@ const theme = createTheme({
           backgroundColor: 'transparent',
           color: '#bebebe',
         },
+        icon: {
+          color: "#bebebe",
+        },
       },
     },
     MuiMenu: {
@@ -33,6 +36,14 @@ const theme = createTheme({
       },
     },
     MuiList: {
+      styleOverrides: {
+        root: {
+            backgroundColor: '#191b24',
+            color: '#bebebe',
+        },
+      },
+    },
+    MuiInput: {
       styleOverrides: {
         root: {
             backgroundColor: '#191b24',

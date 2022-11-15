@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from "react";
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Tooltip from '@mui/material/Tooltip';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
+import { CircularProgress, Input, Select, Tooltip, Button, Box, MenuItem } from "@mui/material";
 
-import Select, { SelectChangeEvent } from '@mui/material/Select';
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import Image from 'next/image'
 import { createChart, CrosshairMode } from "lightweight-charts";
@@ -14,6 +8,7 @@ import {getSubqueryPoolData,getOnchainPoolData,lastBlockData,convertJsonDataToCh
 import {getSubstrateAPI} from '../lib/substrate-apis'
 import {getPairByTokenName, getAllPairsWithRev} from '../lib/pairs'
 import store from '../lib/store';
+import { convertTimestamp } from '../lib/utils'
 
 function Chart(props) {
     var {
@@ -21,23 +16,21 @@ function Chart(props) {
         timeframe,
         token0,
         token1,
-        dec,
 	} = props;
     const chart = React.useRef();
     const ref = React.useRef();
+    const chartProgress = React.useRef();
     const refLimit = React.useRef(200)
-    const [pooldata, setPoolData] = useState([]);
+    //const [pooldata, setPoolData] = useState([]);
     const [graphData, setGraphData] = useState();
+    const [candleSeries, setCandleSeries] = useState([]);
     const [update, setUpdate] = useState(false);
     const [propSource, setSource] = useState(source);
     const [propTimeframe, setTimeframe] = useState(timeframe);
     const [propPairName, setPairName] = useState("");
-    const [propToken0, setToken0] = useState(token0);
-    const [propToken1, setToken1] = useState(token1);
-    const [candleSeries, setCandleSeries] = useState([]);
-    const [datemaj,setDate] = useState(new Date().toTimeString())
-    const [lastblockOnchain,setLastBlockOnchain] = useState(lastBlockData['onchain'][source])
-    const [lastblockSubquery,setLastBlockSubquery] = useState(lastBlockData['subquery'][source])   
+    const [propToken0, setToken0] = useState(token0.toUpperCase());
+    const [propToken1, setToken1] = useState(token1.toUpperCase());
+
     let loaded=false;
 
     useEffect(() => {
@@ -102,7 +95,8 @@ function Chart(props) {
             }
 
             var id = token0+"/"+token1+"-"+param.time
-            var tooltipBlockNumber = store.getByIdInPair("PoolBlockData",id).blockNumber
+           
+            var tooltipBlockNumber = store.getByIdInPair("PoolData",id).blockNumber
     
             if (tooltipBlockNumber === undefined) {
                 toolTip.style.display = 'none';
@@ -144,6 +138,7 @@ function Chart(props) {
             // Nettoyage 
 			window.removeEventListener('resize', handleResize);
 			chart.current.remove();
+            toolTip.remove();
         };
 
     }, []);
@@ -162,42 +157,44 @@ function Chart(props) {
             candleSeries.update(graphData);
             setUpdate(false)
         }
+        chartProgress.current.className = "progress-wrapper";
     }, [graphData,candleSeries]);
 
 
-    function load(tf=propTimeframe,t0=propToken0,t1=propToken1) {
+    function load(tf=propTimeframe,t0=propToken0,t1=propToken1) {    
+        chartProgress.current.className = "progress-wrapper show";
         let pair = getPairByTokenName(t0,t1)
-        console.log("LAOD---",pair)
+        //console.log("LAOD---",chartProgress.current)
         let src = pair.source
         setTimeframe(tf);
         setSource(src);
-
-        
         if (pair.types.includes("subquery")) {
             getSubqueryPoolData(src,tf,pair,refLimit.current.value).then((dataSubquery)=>{
-                setLastBlockSubquery(lastBlockData["subquery"][src])
-                setPoolData(dataSubquery); 
-                setDate(dataSubquery[dataSubquery.length-1].datetime)
+                //setLastBlockSubquery(lastBlockData["subquery"][src])
+                //setPoolData(dataSubquery); 
+                //setDate(dataSubquery[dataSubquery.length-1].datetime)
 
                 //candleSeries.setData(pooldata);
-                let graphDataSubquery = convertJsonDataToChartEntries(dataSubquery,"subquery",src,pair.rev)
+                let graphDataSubquery = convertJsonDataToChartEntries(dataSubquery,"subquery",src,pair.rev,tf)
     
-                let lastData = graphDataSubquery[graphDataSubquery.length-1]
+                //let lastData = graphDataSubquery[graphDataSubquery.length-1]
         
                 setGraphData(graphDataSubquery)
                 //candleSeries.setData(graphDataSubquery);
                 //("lastblock subquery acala",lastBlockData["subquery"]['acala'])
-                console.log("GRAPHDATAS SUBQUERY",graphDataSubquery)
+                //console.log("GRAPHDATAS SUBQUERY",graphDataSubquery)
                 //getOnchainPoolData("acala","Block","DOT","LCDOT",2,lastBlockData["subquery"]['acala'],null).then( () => {
                 if (pair.types.includes("onchain")) {
                     loadOnchain(tf,pair,false)
                 }
+                
             }); 
         } else if (pair.types.includes("onchain")) {
-            console.log("ONCHAIN")
+            //console.log("ONCHAIN")
             loadOnchain(tf,pair,true)
         }
-        
+        console.log(store);
+
     }  
 
     function loadOnchain(tf=timeframe,pair,init=false) {
@@ -205,13 +202,15 @@ function Chart(props) {
         let arrayLastBlocks=[0]
         if (lastBlockData["subquery"][src] !== undefined) {arrayLastBlocks.push(lastBlockData["subquery"][src])}
         if (lastBlockData["onchain"][src] !== undefined) {arrayLastBlocks.push(lastBlockData["onchain"][src])}
-        let last_block = Math.max(...arrayLastBlocks)
-        console.log("LAST BLOCK "+pair.source,last_block)
-        getOnchainPoolData(pair,last_block,null,200,10).then( (dataOnchain) => {
-            console.log("DATAONCHAIN",dataOnchain)
-            setLastBlockOnchain(lastBlockData["onchain"][src])
-            let graphDataOnchain = convertJsonDataToChartEntries(dataOnchain,"onchain",src,pair.rev)
-            console.log("graphDataOnchain",graphDataOnchain)
+        let last_block = init ? 0 : Math.max(...arrayLastBlocks)
+        //console.log("LAST BLOCK "+pair.source,last_block)
+        let shifts = {"Day":1000,"Hour":300,"15Mn":75,"1Mn":5,"Block":0}
+        let step = init ? shifts[tf] : 0
+        getOnchainPoolData(pair,last_block,null,refLimit.current.value,step).then( (dataOnchain) => {
+            //console.log("DATAONCHAIN",dataOnchain)
+           // setLastBlockOnchain(lastBlockData["onchain"][src])
+            let graphDataOnchain = convertJsonDataToChartEntries(dataOnchain,"onchain",src,pair.rev,tf)
+            //console.log("graphDataOnchain",graphDataOnchain)
             if (init){
                 setGraphData(graphDataOnchain)
                 //candleSeries.setData(graphDataOnchain);
@@ -226,21 +225,14 @@ function Chart(props) {
                     }
                     prevEntry=entry;
                 }); 
-            }
-            
-            
-            console.log("loadonchain")
-            setInterval(function() {
-                //loadOnchain(tf,cs)
-            }, 6000);
-            
+            } 
         })
     }
 
     // Inversion des tokens dans la fonction loadPair, avant l'appel de load
     function loadPair(token0,token1){
         const pair = getPairByTokenName(token0,token1)
-        console.log("loadPair pair:",pair)
+        //console.log("loadPair pair:",pair)
         let t0name = pair.token0name
         let t1name = pair.token1name
         setToken0(t0name)
@@ -250,7 +242,7 @@ function Chart(props) {
     }
 
     function PairName(props) {
-        console.log("function PairName")
+       // console.log("function PairName")
         const pair = getPairByTokenName(props.t0,props.t1)
         const source = pair.source
         return(
@@ -272,12 +264,12 @@ function Chart(props) {
     function SelectPair() {
         let res=[];
         let all_pairs = getAllPairsWithRev();
-        console.log("ALL PAIRS##############",all_pairs)
+        //console.log("ALL PAIRS##############",all_pairs)
         all_pairs.forEach(pair => {
             let t0 = pair.token0name;
             let t1 = pair.token1name;
-            let rev_class = pair.rev ? 'pair-rev' : ''
-            res.push(<MenuItem key={`${pair.name}`} value={`${pair.name}`} className={rev_class}><PairName t0={`${t0}`} t1={`${t1}`} /></MenuItem>)
+            let display_class = pair.display ? '' : 'pair-hide'
+            res.push(<MenuItem key={`${pair.name}`} value={`${pair.name}`} className={display_class}><PairName t0={`${t0}`} t1={`${t1}`} /></MenuItem>)
         });
         return(
             <Select
@@ -291,26 +283,26 @@ function Chart(props) {
     }
 
     return (  
-        <Box className="graph-wrapper">
-            <Box ref={ref}>
-                <Box sx={{pb:1}}>
-                    
-                    <SelectPair/>    
-                    
+        <Box className="graph-wrapper" sx={{position:"relative"}}>
+            <Box ref={ref} sx={{position:"relative"}}>
+                <Box sx={{pb:1, position:"relative"}}> 
+                    <SelectPair/>      
                     <Box component="span" className="graph-options">
-                        <Tooltip title="Reverse pair"><Button onClick={() => {loadPair(propToken1,propToken0)}}><CompareArrowsIcon /></Button></Tooltip>
+                        <Tooltip title="Reverse pair"><Button className="bt-rev" onClick={() => {loadPair(propToken1,propToken0)}}><CompareArrowsIcon /></Button></Tooltip>
                         {/*<input className="req-limit" ref={refLimit} type="text" defaultValue="200"></input>*/}
-                        <Tooltip title="Day"><Button onClick={() => {load("Day")}}>D</Button></Tooltip>
-                        <Tooltip title="Hour"><Button onClick={() => load("Hour")}>H</Button></Tooltip>
-                        <Tooltip title="15 minutes"><Button onClick={() => load("15Mn")}>15m</Button></Tooltip>
-                        <Tooltip title="1 minute"><Button onClick={() => load("1Mn")}>1m</Button></Tooltip>
-                        <Tooltip title="Block"><Button onClick={() => load("Block")}>B</Button></Tooltip>
+                        <Tooltip title="Day"><Button className={(propTimeframe === "Day") ? "active" : ""} onClick={() => {load("Day")}}>D</Button></Tooltip>
+                        <Tooltip title="Hour"><Button className={(propTimeframe === "Hour") ? "active" : ""} onClick={() => load("Hour")}>H</Button></Tooltip>
+                        <Tooltip title="15 minutes"><Button className={(propTimeframe === "15Mn") ? "active" : ""} onClick={() => load("15Mn")}>15m</Button></Tooltip>
+                        <Tooltip title="1 minute"><Button className={(propTimeframe === "1Mn") ? "active" : ""} onClick={() => load("1Mn")}>1m</Button></Tooltip>
+                        <Tooltip title="Block"><Button className={(propTimeframe === "Block") ? "active" : ""} onClick={() => load("Block")}>B</Button></Tooltip>
+                        <input class="request-limit" ref={refLimit} type="text" defaultValue="200"></input>
                     </Box>
                     <Box style={{float:"right"}} className="graph-legend">
-                        <BlockNumber type="onchain" blocknumber={lastblockOnchain}></BlockNumber>
-                        <BlockNumber type="subquery" blocknumber={lastblockSubquery}></BlockNumber>
+                        <BlockNumber type="onchain" blocknumber={lastBlockData["onchain"][propSource]}></BlockNumber>
+                        <BlockNumber type="subquery" blocknumber={lastBlockData["subquery"][propSource]}></BlockNumber>
                     </Box>
                 </Box>
+                <Box ref={chartProgress} className="progress-wrapper" display="flex" justifyContent="center" alignItems="center"><CircularProgress sx={{margin:"auto"}} /></Box>
             </Box>
             
             

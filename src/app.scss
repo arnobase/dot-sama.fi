@@ -1,6 +1,7 @@
 body {
     background-color: #191b24;
-	color:#bebebe
+	color:#bebebe;
+	position: relative;
 }
 .active {
     background-color: white;
@@ -37,7 +38,7 @@ fieldset.MuiOutlinedInput-notchedOutline {
 	}
 }
 .pair-name {
-	padding: 0 12px 0 0;
+	padding: 0 4px 0 0;
 	img {
 		border-radius: 50%;
 		margin:0 5px -3px 0;
@@ -45,22 +46,29 @@ fieldset.MuiOutlinedInput-notchedOutline {
 		height: 18px;
 	}
 }
-.pair-rev {
+.pair-hide {
 	display:none;
 }
 .graph-wrapper {
-    background-color: rgb(32,34,43);
+    background-color: #20222b;
 	padding: 10px;
 	margin: 15px;
 	border-radius: 10px;	
-	.req-limit {
+	.request-limit {
 		width:50px;
+		padding-left:"5px";
+		margin-left:"5px";
+		background-color: '#191b24';
+        color: '#bebebe';
 	}
 	
 	.graph-legend {
 		font-size: 0.8em;
 	}
 	button {
+		&.bt-rev {
+			margin-right: 12px;
+		}
 		border: 1px solid #3a3838;
 		padding: 0 4px;
 		margin: 0 4px;
@@ -69,9 +77,25 @@ fieldset.MuiOutlinedInput-notchedOutline {
 		background-color: rgb(47 47 47);
 		text-transform: none;
 		color: #bebebe;
+		&.active {
+			background-color: rgb(111, 111, 111);
+		}
 		span {
 			text-transform: none;
 			color: inherit;
 		}
 	}
+
+	.progress-wrapper {
+		display: none;
+		position: absolute;
+		height: 300px;
+		width: 100%;
+		background-color: rgba(0,0,0,0.5);
+    	z-index: 10;
+		&.show {
+			display:flex;
+		}
+	}
+	
 }

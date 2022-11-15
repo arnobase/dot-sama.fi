@@ -2820,6 +2820,11 @@ source-map@^0.5.7:
   resolved "https://registry.npmjs.org/source-map/-/source-map-0.5.7.tgz"
   integrity sha512-LbrmJOMUSdEVxIKvdcJzQC+nQhe8FUZQTXQy6+I75skNgn3OoQ0DZA8YnFa7gp8tqtL3KPf1kmo0R5DoApeSGQ==
 
+spacetime@^7.1.4:
+  version "7.1.4"
+  resolved "https://registry.yarnpkg.com/spacetime/-/spacetime-7.1.4.tgz#f288e4dcecbb0ec56e76c3b2a09c55badc18cebe"
+  integrity sha512-ZzYuGjaMPE42p/fVU9Qcd+aMhgYzC83hgqMKyWlGILtponsLm5KJZgWzblLnOU8OblMQa3YXo/0IiZZ5JsTDfA==
+
 string.prototype.matchall@^4.0.7:
   version "4.0.7"
   resolved "https://registry.npmjs.org/string.prototype.matchall/-/string.prototype.matchall-4.0.7.tgz"
